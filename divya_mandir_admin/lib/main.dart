@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'manage_music_screen.dart';
 import 'manage_pooja_tools_screen.dart';
 import 'manage_god_photos_screen.dart';
+import 'manage_status_photos_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -102,6 +103,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       _buildMenuItem("Manage Pooja Tools (More)", 7),
                     ],
                   ),
+                  _buildMenuItem("Manage Status Categories", 9),
                 ],
               ),
             ),
@@ -164,6 +166,14 @@ class _AdminHomePageState extends State<AdminHomePage> {
         return const ManagePoojaToolsScreen();
       case 8:
         return const ManageLongBellsScreen();
+      case 9:
+        return const ManageCollectionScreen(
+          key: ValueKey("status_categories"),
+          title: "Manage Status Categories",
+          collectionName: "status_categories",
+          hasImage: true,
+          hasAudio: false,
+        );
       default:
         return const Center(
           child: Text(
@@ -314,6 +324,16 @@ class _ManageCollectionScreenState extends State<ManageCollectionScreen> {
                                 ),
                               ),
                             );
+                          } : widget.collectionName == 'status_categories' ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ManageStatusPhotosScreen(
+                                  categoryId: docId,
+                                  categoryName: name,
+                                ),
+                              ),
+                            );
                           } : null,
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
@@ -368,6 +388,16 @@ class _ManageCollectionScreenState extends State<ManageCollectionScreen> {
                             builder: (context) => ManageGodPhotosScreen(
                               godId: docId,
                               godName: name,
+                            ),
+                          ),
+                        );
+                      } : widget.collectionName == 'status_categories' ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ManageStatusPhotosScreen(
+                              categoryId: docId,
+                              categoryName: name,
                             ),
                           ),
                         );

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'music_screen.dart';
+import 'status_screen.dart';
+import 'main_home_screen.dart';
+import 'panchangam_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -13,11 +16,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    const HomeScreen(), // Tab 0: Virtual Pooja
-    const MusicScreen(), // Tab 1: Devotional Music
-    const Center(child: Text('Center Premium Menu', style: TextStyle(fontSize: 20))), // Tab 2: Center Lotus
-    const Center(child: Text('Explore Temples Coming Soon', style: TextStyle(fontSize: 20))), // Tab 3
-    const Center(child: Text('My Devotion Coming Soon', style: TextStyle(fontSize: 20))), // Tab 4
+    const MainHomeScreen(), // Tab 0: Home
+    const StatusScreen(), // Tab 1: Status
+    const HomeScreen(), // Tab 2: Pooja (Virtual Pooja)
+    const MusicScreen(), // Tab 3: Devotional Music
+    const PanchangamScreen(), // Tab 4: Panchangam
   ];
 
   @override
@@ -52,11 +55,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           items: [
             const BottomNavigationBarItem(
               icon: Icon(Icons.home_filled),
-              label: 'Puja',
+              label: 'Home',
             ),
             const BottomNavigationBarItem(
-              icon: Icon(Icons.music_note),
-              label: 'Music',
+              icon: Icon(Icons.photo_library),
+              label: 'Status',
             ),
             BottomNavigationBarItem(
               icon: Container(
@@ -67,15 +70,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: const Icon(Icons.self_improvement, color: Colors.white),
               ),
-              label: '',
+              label: 'Pooja',
             ),
             const BottomNavigationBarItem(
-              icon: Icon(Icons.explore),
-              label: 'Explore',
+              icon: Icon(Icons.music_note),
+              label: 'Music',
             ),
             const BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'My Devotion',
+              icon: Icon(Icons.calendar_month),
+              label: 'Panchangam',
             ),
           ],
         ),
