@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "11804332615",
+    "project_id": "sevaapp-af368",
+    "storage_bucket": "sevaapp-af368.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:11804332615:android:aaa3a59c52786303d6d762",
+        "android_client_info": {
+          "package_name": "com.example.divya_mandir"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCddRfxd7TofkunPWWTQTtoTb4ilFAUgm0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
