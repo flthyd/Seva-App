@@ -670,14 +670,20 @@ class _MusicPlayerSheetState extends State<MusicPlayerSheet> {
       right: 0,
       child: SafeArea(
         top: false,
-        child: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NowPlayingScreen()),
-            );
+        child: Dismissible(
+          key: ValueKey('sticky_mini_player_${song.id}'),
+          direction: DismissDirection.horizontal,
+          onDismissed: (_) {
+            _audioService.closePlayer();
           },
-          child: Container(
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NowPlayingScreen()),
+              );
+            },
+            child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
@@ -797,6 +803,7 @@ class _MusicPlayerSheetState extends State<MusicPlayerSheet> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

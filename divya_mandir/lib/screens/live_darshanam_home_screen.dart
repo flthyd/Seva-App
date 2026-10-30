@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/live_darshanam_models.dart';
 import 'live_darshanam_player_screen.dart';
+import 'modern_temple_search_screen.dart';
+import 'all_temples_list_screen.dart';
 
 class LiveDarshanamHomeScreen extends StatefulWidget {
   const LiveDarshanamHomeScreen({super.key});
@@ -1021,9 +1023,11 @@ class _LiveDarshanamHomeScreenState extends State<LiveDarshanamHomeScreen> with 
 
   // SCREEN 12: SEARCH SCREEN
   void _openSearchScreen(BuildContext context, List<TempleDarshanModel> temples) {
-    showSearch(
-      context: context,
-      delegate: TempleSearchDelegate(temples: temples),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ModernTempleSearchScreen(temples: temples),
+      ),
     );
   }
 
@@ -1117,36 +1121,7 @@ class _LiveDarshanamHomeScreenState extends State<LiveDarshanamHomeScreen> with 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => Scaffold(
-          backgroundColor: const Color(0xFFFCF7EE),
-          appBar: AppBar(
-            backgroundColor: const Color(0xFF6A1B29),
-            foregroundColor: Colors.white,
-            title: const Text("అన్ని దేవాలయాలు (All Temples)"),
-          ),
-          body: ListView.separated(
-            padding: const EdgeInsets.all(14),
-            itemCount: temples.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, i) {
-              final t = temples[i];
-              return Card(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                child: ListTile(
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(t.bannerImage, width: 50, height: 50, fit: BoxFit.cover),
-                  ),
-                  title: Text(t.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text("${t.templeLocation} • 👁 ${t.viewerCount}"),
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                  onTap: () => _openTempleDetails(context, t),
-                ),
-              );
-            },
-          ),
-        ),
+        builder: (_) => AllTemplesListScreen(temples: temples),
       ),
     );
   }

@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
   ffmpeg_kit_flutter_new_min_gpl
   file_selector_linux
+  syncfusion_pdfviewer_linux
   url_launcher_linux
 )
 

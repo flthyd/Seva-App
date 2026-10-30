@@ -21,8 +21,12 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final cart = CartProvider();
+    final isTelugu = LanguageService().isTelugu;
     final p = widget.product;
     final images = p.galleryImages.isNotEmpty ? p.galleryImages : [p.image];
+    final localizedName = p.localizedName(isTelugu);
+    final localizedDesc = p.localizedDescription(isTelugu);
+    final localizedKit = p.localizedKitItems(isTelugu);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFCF7EE),
@@ -146,7 +150,7 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    p.name,
+                    localizedName,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -184,7 +188,7 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                           border: Border.all(color: const Color(0xFFA5D6A7)),
                         ),
                         child: Text(
-                          '${p.discountPercent}% ఆఫర్',
+                          isTelugu ? '${p.discountPercent}% ఆఫర్' : '${p.discountPercent}% OFF',
                           style: const TextStyle(
                             color: Color(0xFF2E7D32),
                             fontSize: 12,
@@ -221,7 +225,7 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                   const SizedBox(height: 12),
                   // Short Description
                   Text(
-                    p.description,
+                    localizedDesc,
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey.shade800,
@@ -232,10 +236,10 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                   const SizedBox(height: 18),
 
                   // "ఈ కిట్‌లో ఉన్నవి" (Kit inclusions) Checklist
-                  if (p.kitItems.isNotEmpty) ...[
-                    const Text(
-                      'ఈ కిట్‌లో ఉన్నవి',
-                      style: TextStyle(
+                  if (localizedKit.isNotEmpty) ...[
+                    Text(
+                      isTelugu ? 'ఈ కిట్‌లో ఉన్నవి' : 'What is inside this Kit',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF6A1B29),
@@ -250,7 +254,7 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                         border: Border.all(color: const Color(0xFFEFE4D2)),
                       ),
                       child: Column(
-                        children: p.kitItems.map((item) {
+                        children: localizedKit.map((item) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
@@ -309,10 +313,10 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                     cart.addToCart(p);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('${p.name} కార్ట్‌కు చేర్చబడింది!'),
+                        content: Text(isTelugu ? '$localizedName కార్ట్‌కు చేర్చబడింది!' : '$localizedName added to cart!'),
                         duration: const Duration(seconds: 2),
                         action: SnackBarAction(
-                          label: 'కార్ట్ చూడు',
+                          label: isTelugu ? 'కార్ట్ చూడు' : 'View Cart',
                           textColor: Colors.amber,
                           onPressed: () {
                             Navigator.push(

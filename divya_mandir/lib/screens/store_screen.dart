@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/store_data_service.dart';
 import '../services/cart_provider.dart';
+import '../services/language_service.dart';
 import 'store_category_listing_screen.dart';
 import 'store_product_detail_screen.dart';
 import 'store_cart_screen.dart';
@@ -16,16 +17,50 @@ class StoreScreen extends StatefulWidget {
 class _StoreScreenState extends State<StoreScreen> {
   final TextEditingController _searchController = TextEditingController();
 
-  static const List<Map<String, String>> gridCategories = [
-    {'title': 'పూజా సామగ్రి', 'image': 'assets/images/store/cat_grid_1.png', 'id': 'pooja_samagri'},
-    {'title': 'పుస్తకాలు', 'image': 'assets/images/store/cat_grid_2.png', 'id': 'pustakalu'},
-    {'title': 'విగ్రహాలు', 'image': 'assets/images/store/cat_grid_3.png', 'id': 'vigrahalu'},
-    {'title': 'రుద్రాక్షలు', 'image': 'assets/images/store/cat_grid_4.png', 'id': 'rudrakshalu'},
-    {'title': 'పసుపు కుంకుమలు', 'image': 'assets/images/store/cat_grid_5.png', 'id': 'pasupu_kunkuma'},
-    {'title': 'ఘృత దీపాలు', 'image': 'assets/images/store/cat_grid_6.png', 'id': 'deepalu'},
-    {'title': 'ఆరతి సామగ్రి', 'image': 'assets/images/store/cat_grid_7.png', 'id': 'arati'},
-    {'title': 'ఉపవాస & ఉత్సవాలు', 'image': 'assets/images/store/cat_grid_8.png', 'id': 'upavasa'},
-  ];
+  List<Map<String, dynamic>> _getGridCategories(bool isTelugu) {
+    return [
+      {
+        'title': isTelugu ? 'పూజా సామగ్రి' : 'Pooja Samagri',
+        'image': 'assets/images/store/cat_grid_1.png',
+        'id': 'pooja_samagri',
+      },
+      {
+        'title': isTelugu ? 'పుస్తకాలు' : 'Books',
+        'image': 'assets/images/store/cat_grid_2.png',
+        'id': 'pustakalu',
+      },
+      {
+        'title': isTelugu ? 'విగ్రహాలు' : 'Idols',
+        'image': 'assets/images/store/cat_grid_3.png',
+        'id': 'vigrahalu',
+      },
+      {
+        'title': isTelugu ? 'రుద్రాక్షలు' : 'Rudraksha',
+        'image': 'assets/images/store/cat_grid_4.png',
+        'id': 'rudrakshalu',
+      },
+      {
+        'title': isTelugu ? 'పసుపు కుంకుమలు' : 'Turmeric & Kumkum',
+        'image': 'assets/images/store/cat_grid_5.png',
+        'id': 'pasupu_kunkuma',
+      },
+      {
+        'title': isTelugu ? 'ఘృత దీపాలు' : 'Ghee Lamps',
+        'image': 'assets/images/store/cat_grid_6.png',
+        'id': 'deepalu',
+      },
+      {
+        'title': isTelugu ? 'ఆరతి సామగ్రి' : 'Aarti Items',
+        'image': 'assets/images/store/cat_grid_7.png',
+        'id': 'arati',
+      },
+      {
+        'title': isTelugu ? 'ఉపవాస & ఉత్సవాలు' : 'Fasting & Festivals',
+        'image': 'assets/images/store/cat_grid_8.png',
+        'id': 'upavasa',
+      },
+    ];
+  }
 
   @override
   void initState() {
@@ -57,6 +92,8 @@ class _StoreScreenState extends State<StoreScreen> {
   Widget build(BuildContext context) {
     final cart = CartProvider();
     final products = StoreDataService.defaultProducts;
+    final isTelugu = LanguageService().isTelugu;
+    final categories = _getGridCategories(isTelugu);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFCF7EE),
@@ -85,22 +122,22 @@ class _StoreScreenState extends State<StoreScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Text(
-                          'దేవోషనల్ స్టోర్',
-                          style: TextStyle(
+                          AppStrings.devotionalStore,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.3,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'పంచాంగ, పూజా సామగ్రి, విగ్రహాలు, ధార్మిక వస్తువులు',
+                          AppStrings.storeSubtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Color(0xFFFFD54F),
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
@@ -113,7 +150,7 @@ class _StoreScreenState extends State<StoreScreen> {
                   // Orders history icon button
                   IconButton(
                     icon: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 22),
-                    tooltip: 'నా ఆర్డర్లు',
+                    tooltip: AppStrings.myOrders,
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -145,11 +182,13 @@ class _StoreScreenState extends State<StoreScreen> {
                               color: Color(0xFFFF9800),
                               shape: BoxShape.circle,
                             ),
+                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
                             child: Text(
                               '${cart.items.length}',
+                              textAlign: TextAlign.center,
                               style: const TextStyle(
-                                fontSize: 10,
                                 color: Colors.white,
+                                fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -168,13 +207,14 @@ class _StoreScreenState extends State<StoreScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search Input Row + Cart Icon matching user screenshot
+            // Search Input Row
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
               child: Row(
                 children: [
                   Expanded(
                     child: Container(
+                      height: 44,
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -195,13 +235,13 @@ class _StoreScreenState extends State<StoreScreen> {
                           Expanded(
                             child: TextField(
                               controller: _searchController,
-                              decoration: const InputDecoration(
-                                hintText: 'ఏమి కావాలి వెతకండి...',
+                              decoration: InputDecoration(
+                                hintText: AppStrings.searchStoreHint,
                                 border: InputBorder.none,
-                                hintStyle: TextStyle(fontSize: 13, color: Colors.grey),
+                                hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
                               ),
                               onSubmitted: (term) {
-                                _openCategory('శోధన ఫలితాలు', 'search');
+                                _openCategory(AppStrings.searchResults, 'search');
                               },
                             ),
                           ),
@@ -217,7 +257,10 @@ class _StoreScreenState extends State<StoreScreen> {
 
             // Hero Promotional Slider Banner ("శుభకార్యాలకు పూజా సామగ్రి - ఇప్పుడే చూడండి ➔")
             GestureDetector(
-              onTap: () => _openCategory('పూజా సామగ్రి', 'pooja_samagri'),
+              onTap: () => _openCategory(
+                isTelugu ? 'పూజా సామగ్రి' : 'Pooja Samagri',
+                'pooja_samagri',
+              ),
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 width: double.infinity,
@@ -255,16 +298,16 @@ class _StoreScreenState extends State<StoreScreen> {
                         left: 16,
                         top: 20,
                         bottom: 20,
-                        width: 170,
+                        width: 185,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
-                              'శుభకార్యాలకు\nపూజా సామగ్రి',
-                              style: TextStyle(
+                            Text(
+                              AppStrings.heroBannerTitle,
+                              style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
+                                fontSize: 17,
                                 fontWeight: FontWeight.w900,
                                 height: 1.2,
                                 shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
@@ -277,19 +320,19 @@ class _StoreScreenState extends State<StoreScreen> {
                                 color: const Color(0xFFFFD54F),
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    'ఇప్పుడే చూడండి',
-                                    style: TextStyle(
+                                    AppStrings.viewNow,
+                                    style: const TextStyle(
                                       color: Color(0xFF6A1B29),
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  SizedBox(width: 4),
-                                  Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFF6A1B29)),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFF6A1B29)),
                                 ],
                               ),
                             ),
@@ -317,11 +360,11 @@ class _StoreScreenState extends State<StoreScreen> {
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 10,
                 ),
-                itemCount: gridCategories.length,
+                itemCount: categories.length,
                 itemBuilder: (ctx, idx) {
-                  final cat = gridCategories[idx];
+                  final cat = categories[idx];
                   return GestureDetector(
-                    onTap: () => _openCategory(cat['title']!, cat['id']!),
+                    onTap: () => _openCategory(cat['title'] as String, cat['id'] as String),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -337,7 +380,7 @@ class _StoreScreenState extends State<StoreScreen> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.asset(
-                              cat['image']!,
+                              cat['image'] as String,
                               width: 52,
                               height: 52,
                               fit: BoxFit.contain,
@@ -347,7 +390,7 @@ class _StoreScreenState extends State<StoreScreen> {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          cat['title']!,
+                          cat['title'] as String,
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -373,21 +416,31 @@ class _StoreScreenState extends State<StoreScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'ప్రత్యేక ఆఫర్లు',
-                    style: TextStyle(
+                  Text(
+                    AppStrings.specialOffers,
+                    style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF6A1B29),
                     ),
                   ),
                   InkWell(
-                    onTap: () => _openCategory('ప్రత్యేక ఆఫర్లు', 'offers'),
-                    child: const Row(
+                    onTap: () => _openCategory(
+                      AppStrings.specialOffers,
+                      'offers',
+                    ),
+                    child: Row(
                       children: [
-                        Text('చూడండి', style: TextStyle(color: Color(0xFF6A1B29), fontSize: 13, fontWeight: FontWeight.bold)),
-                        SizedBox(width: 4),
-                        Icon(Icons.arrow_forward_rounded, color: Color(0xFF6A1B29), size: 14),
+                        Text(
+                          AppStrings.viewAll,
+                          style: const TextStyle(
+                            color: Color(0xFF6A1B29),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_forward_rounded, color: Color(0xFF6A1B29), size: 14),
                       ],
                     ),
                   ),
@@ -406,6 +459,7 @@ class _StoreScreenState extends State<StoreScreen> {
                 itemCount: products.length,
                 itemBuilder: (ctx, i) {
                   final p = products[i];
+                  final pName = p.localizedName(isTelugu);
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -446,7 +500,7 @@ class _StoreScreenState extends State<StoreScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  p.name,
+                                  pName,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
@@ -463,7 +517,7 @@ class _StoreScreenState extends State<StoreScreen> {
                                       onTap: () {
                                         cart.addToCart(p);
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('${p.name} కార్ట్‌కు చేర్చబడింది!'), duration: const Duration(seconds: 1)),
+                                          SnackBar(content: Text('$pName ${AppStrings.addedToCart}'), duration: const Duration(seconds: 1)),
                                         );
                                       },
                                       child: Container(

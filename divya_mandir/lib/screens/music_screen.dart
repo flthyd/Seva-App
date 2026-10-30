@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/audio_player_service.dart';
 import '../services/ringtone_service.dart';
 import 'now_playing_screen.dart';
+import 'dashboard.dart';
 
 class MusicScreen extends StatefulWidget {
   final String initialCategoryId;
@@ -152,6 +153,17 @@ class _MusicScreenState extends State<MusicScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFCF8F2),
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFF1C40F)),
+          tooltip: 'వెనక్కి (Back)',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              DashboardScreen.switchTab(context, 0); // Navigate to Home tab
+            }
+          },
+        ),
         title: const Text(
           'దివ్య సంగీతం (Divine Music)',
           style: TextStyle(
@@ -750,100 +762,151 @@ class _MusicScreenState extends State<MusicScreen> {
     );
   }
 
-  // Floating Mini Player (Quick Play/Pause + Tap to open Full Screen Player)
+  String _formatDuration(Duration d) {
+    String minutes = d.inMinutes.toString().padLeft(2, '0');
+    String seconds = (d.inSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  // Floating Mini Player (Quick Play/Pause + Tap to open Full Screen Player + Swipe to dismiss)
   Widget _buildMiniPlayer(SongModel song) {
     final isPlaying = _audioService.isPlaying;
 
-    return GestureDetector(
-      onTap: _openNowPlaying,
-      child: Container(
-        height: 68,
-        decoration: BoxDecoration(
-          color: const Color(0xFF220A0F),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, -3),
-            ),
+    return Dismissible(
+      key: ValueKey('mini_player_${song.id}'),
+      direction: DismissDirection.horizontal,
+      onDismissed: (_) {
+        _audioService.closePlayer();
+      },
+      background: Container(
+        color: const Color(0xFF6A1B29),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        alignment: Alignment.centerLeft,
+        child: const Row(
+          children: [
+            Icon(Icons.close, color: Colors.white, size: 24),
+            SizedBox(width: 8),
+            Text('Close Player', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
-        child: Column(
+      ),
+      secondaryBackground: Container(
+        color: const Color(0xFF6A1B29),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        alignment: Alignment.centerRight,
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // Tiny Golden Linear Progress Indicator
-            LinearProgressIndicator(
-              value: (_audioService.duration.inSeconds > 0)
-                  ? (_audioService.position.inSeconds / _audioService.duration.inSeconds).clamp(0.0, 1.0)
-                  : 0.0,
-              backgroundColor: Colors.white12,
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF1C40F)),
-              minHeight: 2.5,
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                child: Row(
-                  children: [
-                    _buildSongThumbnail(song.imageUrl, song.isLocal, 46),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            song.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
+            Text('Close Player', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            SizedBox(width: 8),
+            Icon(Icons.close, color: Colors.white, size: 24),
+          ],
+        ),
+      ),
+      child: GestureDetector(
+        onTap: _openNowPlaying,
+        child: Container(
+          height: 72,
+          decoration: BoxDecoration(
+            color: const Color(0xFF220A0F),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, -3),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Tiny Golden Linear Progress Indicator
+              LinearProgressIndicator(
+                value: (_audioService.duration.inSeconds > 0)
+                    ? (_audioService.position.inSeconds / _audioService.duration.inSeconds).clamp(0.0, 1.0)
+                    : 0.0,
+                backgroundColor: Colors.white12,
+                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF1C40F)),
+                minHeight: 2.5,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                  child: Row(
+                    children: [
+                      _buildSongThumbnail(song.imageUrl, song.isLocal, 46),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              song.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            song.artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFFF1C40F),
-                              fontSize: 12,
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Text(
+                                  song.artist,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Color(0xFFF1C40F),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '•  ${_formatDuration(_audioService.position)} / ${_formatDuration(_audioService.duration)}',
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.skip_previous_rounded, color: Colors.white70, size: 28),
-                      onPressed: _audioService.playPrevious,
-                    ),
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1C40F),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(
-                          isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                          color: const Color(0xFF220A0F),
-                          size: 26,
+                          ],
                         ),
-                        onPressed: _audioService.togglePlayPause,
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.skip_next_rounded, color: Colors.white70, size: 28),
-                      onPressed: _audioService.playNext,
-                    ),
-                  ],
+                      IconButton(
+                        icon: const Icon(Icons.skip_previous_rounded, color: Colors.white70, size: 28),
+                        onPressed: _audioService.playPrevious,
+                      ),
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF1C40F),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            color: const Color(0xFF220A0F),
+                            size: 26,
+                          ),
+                          onPressed: _audioService.togglePlayPause,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.skip_next_rounded, color: Colors.white70, size: 28),
+                        onPressed: _audioService.playNext,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

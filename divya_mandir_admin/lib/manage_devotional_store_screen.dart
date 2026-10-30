@@ -15,7 +15,9 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
     {
       'id': 'prod_1',
       'name': 'పూజా సామగ్రి కిట్',
+      'name_en': 'Pooja Samagri Kit',
       'category': 'పూజా సామగ్రి',
+      'category_en': 'Pooja Items',
       'price': 499.0,
       'originalPrice': 699.0,
       'stock': 45,
@@ -23,11 +25,14 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
       'inStock': true,
       'image': 'assets/images/store/prod_pooja_kit.png',
       'description': 'దేవోత్సవాల పూజోపహారం. పవిత్రమైన పూజా ద్రవ్యాల సంపూర్ణ సమాహారం.',
+      'description_en': 'Sacred celebration pooja gift kit with essential sacred items.',
     },
     {
       'id': 'prod_2',
       'name': 'పిత్తల దీపం',
+      'name_en': 'Brass Oil Lamp',
       'category': 'దీపాలు',
+      'category_en': 'Ghee Lamps',
       'price': 299.0,
       'originalPrice': 399.0,
       'stock': 70,
@@ -35,11 +40,14 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
       'inStock': true,
       'image': 'assets/images/store/prod_deepam.png',
       'description': 'స్వచ్ఛమైన ఇత్తడితో తయారుచేసిన సాంప్రదాయ పూజా దీపం.',
+      'description_en': 'Traditional hand-crafted pure brass pooja oil lamp.',
     },
     {
       'id': 'prod_3',
       'name': 'పంచపాత్ర సెట్టు',
+      'name_en': 'Panchapatra Set',
       'category': 'పూజా సామగ్రి',
+      'category_en': 'Pooja Items',
       'price': 599.0,
       'originalPrice': 799.0,
       'stock': 30,
@@ -47,11 +55,14 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
       'inStock': true,
       'image': 'assets/images/store/prod_panchapatra.png',
       'description': 'పూజలో తీర్థం మరియు ఆచమనానికి ఉపయోగించే స్వచ్ఛమైన పంచపాత్ర.',
+      'description_en': 'Pure copper/brass panchapatra vessel set used for holy water.',
     },
     {
       'id': 'prod_4',
       'name': 'గంట (పూజా ఘంట)',
+      'name_en': 'Pooja Brass Bell',
       'category': 'పూజా సామగ్రి',
+      'category_en': 'Pooja Items',
       'price': 199.0,
       'originalPrice': 299.0,
       'stock': 55,
@@ -59,11 +70,14 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
       'inStock': true,
       'image': 'assets/images/store/prod_ganta.png',
       'description': 'నంది ముద్రతో కూడిన మధుర నాద పూజా గంట.',
+      'description_en': 'Melodious pooja brass bell with auspicious Nandi carving.',
     },
     {
       'id': 'prod_5',
       'name': 'ఆరతి ప్లేట్',
+      'name_en': 'Aarti Brass Plate',
       'category': 'పూజా ప్లేట్లు',
+      'category_en': 'Aarti Essentials',
       'price': 249.0,
       'originalPrice': 349.0,
       'stock': 40,
@@ -71,11 +85,14 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
       'inStock': true,
       'image': 'assets/images/store/prod_arati_plate.png',
       'description': 'కర్పూర హారతి ఇవ్వడానికి ప్రత్యేకమైన పూజా ప్లేట్.',
+      'description_en': 'Special brass engraved aarti plate for camphor offerings.',
     },
     {
       'id': 'prod_6',
       'name': 'కుంకుమ పాత్ర',
+      'name_en': 'Kumkum Box',
       'category': 'కుంకుమ పాత్రలు',
+      'category_en': 'Turmeric & Kumkum',
       'price': 149.0,
       'originalPrice': 199.0,
       'stock': 80,
@@ -83,6 +100,7 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
       'inStock': true,
       'image': 'assets/images/store/prod_kunkuma_patra.png',
       'description': 'లక్ష్మీ దేవి స్వరూపమైన కుంకుమ భద్రపరచుకునే ఇత్తడి భరిణ.',
+      'description_en': 'Auspicious Goddess Lakshmi design brass kumkum holder.',
     },
   ];
 
@@ -423,12 +441,26 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
                       children: [
                         Row(
                           children: [
-                            Text(p['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            Expanded(
+                              child: Text(
+                                p['name_en'] != null && p['name_en'].toString().isNotEmpty
+                                    ? '${p['name']} / ${p['name_en']}'
+                                    : p['name'],
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(6)),
-                              child: Text(p['category'], style: const TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.bold)),
+                              child: Text(
+                                p['category_en'] != null && p['category_en'].toString().isNotEmpty
+                                    ? '${p['category']} (${p['category_en']})'
+                                    : p['category'],
+                                style: const TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ],
                         ),
@@ -619,11 +651,14 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
   // Dialog to Add or Edit Product
   void _showAddProductDialog(BuildContext context, {Map<String, dynamic>? existing}) {
     final nameCtrl = TextEditingController(text: existing?['name'] ?? '');
+    final nameEnCtrl = TextEditingController(text: existing?['name_en'] ?? existing?['nameEn'] ?? '');
     final catCtrl = TextEditingController(text: existing?['category'] ?? 'పూజా సామగ్రి');
+    final catEnCtrl = TextEditingController(text: existing?['category_en'] ?? existing?['categoryEn'] ?? 'Pooja Items');
     final priceCtrl = TextEditingController(text: existing != null ? '${existing['price']}' : '');
     final origPriceCtrl = TextEditingController(text: existing != null ? '${existing['originalPrice']}' : '');
     final stockCtrl = TextEditingController(text: existing != null ? '${existing['stock']}' : '50');
     final descCtrl = TextEditingController(text: existing?['description'] ?? '');
+    final descEnCtrl = TextEditingController(text: existing?['description_en'] ?? existing?['descriptionEn'] ?? '');
 
     showDialog(
       context: context,
@@ -632,12 +667,26 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
           title: Text(existing == null ? 'కొత్త వస్తువును చేర్చండి' : 'వస్తువును సవరించండి', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF6A1B29))),
           content: SingleChildScrollView(
             child: SizedBox(
-              width: 450,
+              width: 480,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'ఉత్పత్తి పేరు (Product Name)*')),
-                  TextField(controller: catCtrl, decoration: const InputDecoration(labelText: 'కేటగిరీ (Category)*')),
+                  Row(
+                    children: [
+                      Expanded(child: TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'పేరు (తెలుగు)*', hintText: 'ఉదా: పంచపాత్ర'))),
+                      const SizedBox(width: 10),
+                      Expanded(child: TextField(controller: nameEnCtrl, decoration: const InputDecoration(labelText: 'Name (English)', hintText: 'e.g. Panchapatra'))),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(child: TextField(controller: catCtrl, decoration: const InputDecoration(labelText: 'కేటగిరీ (తెలుగు)*', hintText: 'పూజా సామగ్రి'))),
+                      const SizedBox(width: 10),
+                      Expanded(child: TextField(controller: catEnCtrl, decoration: const InputDecoration(labelText: 'Category (English)', hintText: 'Pooja Items'))),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(child: TextField(controller: priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ఆఫర్ ధర (₹)*'))),
@@ -645,8 +694,12 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
                       Expanded(child: TextField(controller: origPriceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'అసలు ధర (MRP ₹)'))),
                     ],
                   ),
+                  const SizedBox(height: 8),
                   TextField(controller: stockCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'స్టాక్ పరిమాణం (Stock Units)*')),
-                  TextField(controller: descCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'వివరణ (Description)')),
+                  const SizedBox(height: 8),
+                  TextField(controller: descCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'వివరణ (తెలుగు)', hintText: 'వస్తువు వివరాలు...')),
+                  const SizedBox(height: 8),
+                  TextField(controller: descEnCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'Description (English)', hintText: 'Product description in English...')),
                 ],
               ),
             ),
@@ -660,18 +713,23 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
                 if (existing != null) {
                   setState(() {
                     existing['name'] = nameCtrl.text.trim();
+                    existing['name_en'] = nameEnCtrl.text.trim();
                     existing['category'] = catCtrl.text.trim();
+                    existing['category_en'] = catEnCtrl.text.trim();
                     existing['price'] = double.tryParse(priceCtrl.text) ?? existing['price'];
                     existing['originalPrice'] = double.tryParse(origPriceCtrl.text) ?? existing['originalPrice'];
                     existing['stock'] = int.tryParse(stockCtrl.text) ?? existing['stock'];
                     existing['description'] = descCtrl.text.trim();
+                    existing['description_en'] = descEnCtrl.text.trim();
                   });
                 } else {
                   setState(() {
                     _mockProducts.add({
                       'id': 'prod_${DateTime.now().millisecondsSinceEpoch}',
                       'name': nameCtrl.text.trim(),
+                      'name_en': nameEnCtrl.text.trim().isNotEmpty ? nameEnCtrl.text.trim() : nameCtrl.text.trim(),
                       'category': catCtrl.text.trim(),
+                      'category_en': catEnCtrl.text.trim().isNotEmpty ? catEnCtrl.text.trim() : catCtrl.text.trim(),
                       'price': double.tryParse(priceCtrl.text) ?? 299.0,
                       'originalPrice': double.tryParse(origPriceCtrl.text) ?? 399.0,
                       'stock': int.tryParse(stockCtrl.text) ?? 50,
@@ -679,6 +737,7 @@ class _ManageDevotionalStoreScreenState extends State<ManageDevotionalStoreScree
                       'inStock': true,
                       'image': 'assets/images/store/prod_pooja_kit.png',
                       'description': descCtrl.text.trim(),
+                      'description_en': descEnCtrl.text.trim(),
                     });
                   });
                 }

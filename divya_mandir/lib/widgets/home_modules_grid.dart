@@ -8,6 +8,7 @@ import '../screens/kathalu_list_screen.dart';
 import '../screens/mantra_list_screen.dart';
 import '../screens/telugu_calendar_screen.dart';
 import '../screens/puja_vidhanam_list_screen.dart';
+import '../screens/spiritual_books_list_screen.dart';
 import '../services/language_service.dart';
 
 class HomeModulesGrid extends StatelessWidget {
@@ -155,7 +156,10 @@ class HomeModulesGrid extends StatelessWidget {
         icon: Icons.local_fire_department_rounded,
         customWidget: null,
         onTap: () {
-          _showModuleDetail(context, AppStrings.spiritualKnowledge, LanguageService().isTelugu ? "ఆధ్యాత్మిక సూక్తులు, భగవద్గీత శ్లోకాలు & వివరణలు త్వరలో..." : "Spiritual quotes, Bhagavad Gita slokas coming soon...");
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SpiritualBooksListScreen()),
+          );
         },
       ),
       _ModuleItem(

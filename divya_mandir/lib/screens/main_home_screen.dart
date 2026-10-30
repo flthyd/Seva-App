@@ -14,7 +14,10 @@ import '../widgets/home_neti_katha_section.dart';
 import '../widgets/home_mantra_japam_section.dart';
 import '../widgets/home_puja_vidhanam_section.dart';
 import '../widgets/home_devotional_store_section.dart';
+import '../widgets/home_spiritual_knowledge_section.dart';
 import '../services/language_service.dart';
+import '../services/notification_service.dart';
+import 'notifications_screen.dart';
 
 class MainHomeScreen extends StatefulWidget {
   const MainHomeScreen({super.key});
@@ -24,6 +27,14 @@ class MainHomeScreen extends StatefulWidget {
 }
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
+  final NotificationService _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationService.init();
+  }
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour >= 4 && hour < 12) {
@@ -120,6 +131,17 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                         ),
                         const SizedBox(width: 8),
 
+                        // Seva App Logo Icon in Navbar (Transparent)
+                        SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: Image.asset(
+                            'assets/images/app_logo.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+
                         // 2. Greeting Title and Subtitle in Telugu (White text)
                         Expanded(
                           child: Column(
@@ -153,60 +175,86 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                           ),
                         ),
 
-                        const SizedBox(width: 6),
-
-                        // 4. Search Icon Button (White Icon)
-                        _buildCircleButton(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('శోధన త్వరలో అందుబాటులోకి వస్తుంది...'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                          child: const Icon(
-                            Icons.search_rounded,
-                            color: Colors.white,
-                            size: 21,
-                          ),
-                        ),
-
                         const SizedBox(width: 8),
 
-                        // 5. Notification Bell Icon Button with Red Dot Badge (White Icon)
-                        _buildCircleButton(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('ప్రస్తుతం కొత్త నోటిఫికేషన్లు ఏమీ లేవు.'),
-                                duration: Duration(seconds: 2),
-                              ),
+                        // 5. Notification Bell Icon Button with Live Unread Count Badge
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('notifications')
+                              .where('is_active', isEqualTo: true)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              final docs = snapshot.data!.docs;
+                              final now = DateTime.now();
+                              final validDocs = docs.where((doc) {
+                                final data = doc.data() as Map<String, dynamic>;
+                                final scheduledAt = (data['scheduled_at'] as Timestamp?)?.toDate();
+                                if (scheduledAt != null && scheduledAt.isAfter(now)) return false;
+                                return true;
+                              }).toList();
+
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                _notificationService.updateUnreadCount(validDocs);
+                              });
+                            }
+
+                            return ListenableBuilder(
+                              listenable: _notificationService,
+                              builder: (context, _) {
+                                final unreadCount = _notificationService.unreadCount;
+
+                                return _buildCircleButton(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const NotificationsScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      const Icon(
+                                        Icons.notifications_none_rounded,
+                                        color: Colors.white,
+                                        size: 21,
+                                      ),
+                                      if (unreadCount > 0)
+                                        Positioned(
+                                          top: -4,
+                                          right: -4,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(3),
+                                            constraints: const BoxConstraints(
+                                              minWidth: 16,
+                                              minHeight: 16,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFE53935), // Vibrant Red badge
+                                              shape: BoxShape.circle,
+                                              border: Border.all(color: const Color(0xFF6A1B29), width: 1.5),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                unreadCount > 9 ? '9+' : '$unreadCount',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                );
+                              },
                             );
                           },
-                          child: Stack(
-                            alignment: Alignment.center,
-                            clipBehavior: Clip.none,
-                            children: [
-                              const Icon(
-                                Icons.notifications_none_rounded,
-                                color: Colors.white,
-                                size: 21,
-                              ),
-                              Positioned(
-                                top: -1,
-                                right: -1,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFF1C40F), // Bright Gold badge on Maroon
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
                       ],
                     ),
@@ -334,6 +382,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             HomeMantraJapamSection(key: ValueKey('mantra_${LanguageService().currentLanguage}')),
             const SizedBox(height: 10),
             HomePujaVidhanamSection(key: ValueKey('puja_${LanguageService().currentLanguage}')),
+            const SizedBox(height: 10),
+            HomeSpiritualKnowledgeSection(key: ValueKey('books_${LanguageService().currentLanguage}')),
             const SizedBox(height: 10),
             HomeDevotionalStoreSection(key: ValueKey('store_${LanguageService().currentLanguage}')),
             const SizedBox(height: 25),

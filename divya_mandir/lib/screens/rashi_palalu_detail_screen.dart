@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/rashi_models.dart';
 import '../services/telugu_rashi_service.dart';
+import '../services/rashi_profile_storage_service.dart';
 import 'know_your_rashi_screen.dart';
 
 class RashiPalaluDetailScreen extends StatefulWidget {
@@ -41,24 +40,15 @@ class _RashiPalaluDetailScreenState extends State<RashiPalaluDetailScreen> with 
   }
 
   Future<void> _loadUserProfiles() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final snap = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('rashi_profiles')
-          .get();
-
-      if (snap.docs.isNotEmpty) {
-        final list = snap.docs.map((d) => UserAstrologyProfile.fromMap(d.data())).toList();
-        setState(() {
-          _savedProfiles = list;
-          if (_activeProfile == null) {
-            _activeProfile = list.first;
-            _selectedRashiId = _activeProfile!.rashiId;
-          }
-        });
-      }
+    final list = await RashiProfileStorageService().loadProfiles();
+    if (mounted) {
+      setState(() {
+        _savedProfiles = list;
+        if (_activeProfile == null && list.isNotEmpty) {
+          _activeProfile = list.first;
+          _selectedRashiId = _activeProfile!.rashiId;
+        }
+      });
     }
   }
 
@@ -83,14 +73,17 @@ class _RashiPalaluDetailScreenState extends State<RashiPalaluDetailScreen> with 
           onRashiConfirmed: (p) {
             setState(() {
               _savedProfiles.removeWhere((e) => e.id == p.id);
-              _savedProfiles.add(p);
+              _savedProfiles.insert(0, p);
               _activeProfile = p;
               _selectedRashiId = p.rashiId;
             });
+            _loadUserProfiles();
           },
         ),
       ),
-    );
+    ).then((_) {
+      _loadUserProfiles();
+    });
   }
 
   @override
@@ -143,8 +136,8 @@ class _RashiPalaluDetailScreenState extends State<RashiPalaluDetailScreen> with 
 
             const SizedBox(height: 10),
 
-            // 3. FIRST TIME / UNCONFIRMED USER NOTICE (If user has not confirmed their Rashi yet)
-            if (!hasConfirmedRashi) _buildUnconfirmedRashiNoticeBanner(),
+            // 3. USER PROFILE CARD (NAME & RASHI WITH CHANGE BUTTON) OR UNCONFIRMED NOTICE BANNER
+            _buildUserProfileOrNoticeCard(rashi, hasConfirmedRashi),
 
             // 4. PERIOD TABS: [నేడు] [వారం] [మాసం] [సంవత్సరం] (Exact matching Screen 2)
             _buildPeriodTabsRow(),
@@ -237,21 +230,101 @@ class _RashiPalaluDetailScreenState extends State<RashiPalaluDetailScreen> with 
     );
   }
 
-  // --- 2. 12 RASHI CIRCULAR HORIZONTAL SCROLLER ---
+  // --- 2. 12 RASHI CIRCULAR HORIZONTAL SCROLLER WITH "MY RASHI" FIRST TAB ---
   Widget _build12RashiHorizontalScroller() {
+    final hasActiveProfile = _activeProfile != null;
+    final userProfileRashiId = _activeProfile?.rashiId;
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: SizedBox(
-        height: 78,
+        height: 84,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
-          itemCount: TeluguRashiService.allRashis.length,
+          itemCount: TeluguRashiService.allRashis.length + (hasActiveProfile ? 1 : 0),
           separatorBuilder: (_, _) => const SizedBox(width: 12),
           itemBuilder: (context, idx) {
-            final r = TeluguRashiService.allRashis[idx];
+            // First item: Dedicated "నా రాశి" (My Rashi / Active Profile) shortcut
+            if (hasActiveProfile && idx == 0) {
+              final myRashi = _service.getRashiById(userProfileRashiId ?? 'mesha');
+              final isSelected = _selectedRashiId == myRashi.id;
+
+              return GestureDetector(
+                onTap: () => setState(() => _selectedRashiId = myRashi.id),
+                child: Column(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFF6A1B29) : const Color(0xFFF1C40F),
+                              width: isSelected ? 2.5 : 1.8,
+                            ),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFFF9EE), Color(0xFFFFECC8)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFF1C40F).withValues(alpha: isSelected ? 0.6 : 0.25),
+                                blurRadius: isSelected ? 8 : 4,
+                                spreadRadius: isSelected ? 1.5 : 0.5,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/rashi_gold/${myRashi.id}.png',
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Center(
+                                child: Text(myRashi.symbol, style: const TextStyle(fontSize: 22, color: Color(0xFF6A1B29))),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Crown/Star Badge indicator
+                        Positioned(
+                          right: -2,
+                          top: -2,
+                          child: Container(
+                            padding: const EdgeInsets.all(2.5),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE53935),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.star_rounded, size: 10, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "నా రాశి (${myRashi.nameTelugu})",
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? const Color(0xFF6A1B29) : const Color(0xFF8B2500),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final rashiIdx = hasActiveProfile ? idx - 1 : idx;
+            final r = TeluguRashiService.allRashis[rashiIdx];
             final isSelected = r.id == _selectedRashiId;
 
             return GestureDetector(
@@ -263,6 +336,7 @@ class _RashiPalaluDetailScreenState extends State<RashiPalaluDetailScreen> with 
                     height: 50,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
+                      border: isSelected ? Border.all(color: const Color(0xFF6A1B29), width: 2) : null,
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
@@ -318,6 +392,217 @@ class _RashiPalaluDetailScreenState extends State<RashiPalaluDetailScreen> with 
         ),
       ),
     );
+  }
+
+  // 3. FIRST TIME / UNCONFIRMED USER NOTICE OR ACTIVE USER PROFILE CARD
+  Widget _buildUserProfileOrNoticeCard(RashiDataModel rashi, bool hasConfirmedRashi) {
+    if (hasConfirmedRashi && _activeProfile != null) {
+      final p = _activeProfile!;
+      final profRashi = _service.getRashiById(p.rashiId);
+      final isViewingOtherRashi = _selectedRashiId != p.rashiId;
+
+      return Column(
+        children: [
+          // If viewing another rashi, show a quick jump notice banner to switch back to user's rashi
+          if (isViewingOtherRashi)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6A1B29),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6A1B29).withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFFF1C40F)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "మీరు '${rashi.nameTelugu}' రాశిని చూస్తున్నారు",
+                      style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => setState(() => _selectedRashiId = p.rashiId),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1C40F),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "${profRashi.nameTelugu} (నా రాశి) ↗",
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF6A1B29),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isViewingOtherRashi
+                    ? [const Color(0xFFFFFBF6), const Color(0xFFFFF6ED)]
+                    : [const Color(0xFFFFF8EC), const Color(0xFFFFF2DC)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isViewingOtherRashi ? const Color(0xFFEADBCE) : const Color(0xFFF1D8B4),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6A1B29).withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Avatar with zodiac icon or profile symbol
+                GestureDetector(
+                  onTap: () => setState(() => _selectedRashiId = p.rashiId),
+                  child: Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF8B1528), Color(0xFF520F1C)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      border: Border.all(color: const Color(0xFFF1C40F), width: 1.5),
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/rashi_gold/${profRashi.id}.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Center(
+                          child: Text(
+                            profRashi.symbol,
+                            style: const TextStyle(color: Color(0xFFF1C40F), fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // User Name and Rashi details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              p.fullName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: Color(0xFF2D1810),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6A1B29).withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              p.relation,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF6A1B29),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          const Icon(Icons.stars_rounded, size: 14, color: Color(0xFFD48806)),
+                          const SizedBox(width: 4),
+                          Text(
+                            "${profRashi.nameTelugu} రాశి",
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF6A1B29),
+                            ),
+                          ),
+                          if (p.nakshatram.isNotEmpty) ...[
+                            Text(
+                              " • ${p.nakshatram}",
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // "మార్చండి" (Change) Button
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6A1B29),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  onPressed: () => _openFamilyProfilesModal(context),
+                  icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                  label: const Text(
+                    "మార్చండి",
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _buildUnconfirmedRashiNoticeBanner();
   }
 
   // --- 3. UNCONFIRMED RASHI NOTICE BANNER ---
@@ -995,7 +1280,23 @@ class _RashiPalaluDetailScreenState extends State<RashiPalaluDetailScreen> with 
                             ),
                             title: Text(p.fullName, style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600)),
                             subtitle: Text("${p.relation} • ${rashiObj.nameTelugu} రాశి (${p.nakshatram})"),
-                            trailing: isCurrent ? const Icon(Icons.check_circle, color: Colors.green) : null,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isCurrent) const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
+                                  tooltip: 'తొలగించు',
+                                  onPressed: () async {
+                                    await RashiProfileStorageService().deleteProfile(p.id);
+                                    if (ctx.mounted) {
+                                      Navigator.pop(ctx);
+                                    }
+                                    _loadUserProfiles();
+                                  },
+                                ),
+                              ],
+                            ),
                             onTap: () {
                               _switchProfile(p);
                               Navigator.pop(ctx);

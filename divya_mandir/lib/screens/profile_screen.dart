@@ -427,6 +427,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 24),
+
+                  // App Logo & Version Branding
+                  Center(
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: Image.asset(
+                            'assets/images/app_logo.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          "Seva App",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF6A1B29),
+                          ),
+                        ),
+                        const Text(
+                          "Version 1.0.0 • Sacred & Devotional",
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),

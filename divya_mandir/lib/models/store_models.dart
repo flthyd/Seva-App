@@ -1,7 +1,9 @@
 class StoreProduct {
   final String id;
   final String name;
+  final String? nameEn;
   final String teluguCategory;
+  final String? categoryEn;
   final String categoryId;
   final double price;
   final double originalPrice;
@@ -11,14 +13,18 @@ class StoreProduct {
   final String image;
   final List<String> galleryImages;
   final String description;
+  final String? descriptionEn;
   final List<String> kitItems; // ఈ కిట్‌లో ఉన్నవి
+  final List<String> kitItemsEn;
   final bool inStock;
   final int stockQuantity;
 
   const StoreProduct({
     required this.id,
     required this.name,
+    this.nameEn,
     required this.teluguCategory,
+    this.categoryEn,
     required this.categoryId,
     required this.price,
     required this.originalPrice,
@@ -28,16 +34,52 @@ class StoreProduct {
     required this.image,
     this.galleryImages = const [],
     required this.description,
+    this.descriptionEn,
     this.kitItems = const [],
+    this.kitItemsEn = const [],
     this.inStock = true,
     this.stockQuantity = 50,
   });
+
+  /// Localized name based on active language
+  String localizedName(bool isTelugu) {
+    if (!isTelugu && nameEn != null && nameEn!.isNotEmpty) {
+      return nameEn!;
+    }
+    return name;
+  }
+
+  /// Localized category based on active language
+  String localizedCategory(bool isTelugu) {
+    if (!isTelugu && categoryEn != null && categoryEn!.isNotEmpty) {
+      return categoryEn!;
+    }
+    return teluguCategory;
+  }
+
+  /// Localized description based on active language
+  String localizedDescription(bool isTelugu) {
+    if (!isTelugu && descriptionEn != null && descriptionEn!.isNotEmpty) {
+      return descriptionEn!;
+    }
+    return description;
+  }
+
+  /// Localized kit items list based on active language
+  List<String> localizedKitItems(bool isTelugu) {
+    if (!isTelugu && kitItemsEn.isNotEmpty) {
+      return kitItemsEn;
+    }
+    return kitItems;
+  }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'name': name,
+      'nameEn': nameEn,
       'teluguCategory': teluguCategory,
+      'categoryEn': categoryEn,
       'categoryId': categoryId,
       'price': price,
       'originalPrice': originalPrice,
@@ -47,7 +89,9 @@ class StoreProduct {
       'image': image,
       'galleryImages': galleryImages,
       'description': description,
+      'descriptionEn': descriptionEn,
       'kitItems': kitItems,
+      'kitItemsEn': kitItemsEn,
       'inStock': inStock,
       'stockQuantity': stockQuantity,
     };
@@ -57,7 +101,9 @@ class StoreProduct {
     return StoreProduct(
       id: id,
       name: map['name'] ?? '',
-      teluguCategory: map['teluguCategory'] ?? 'పూజా సామాగ్రి',
+      nameEn: map['nameEn'] ?? map['name_en'],
+      teluguCategory: map['teluguCategory'] ?? map['category'] ?? 'పూజా సామాగ్రి',
+      categoryEn: map['categoryEn'] ?? map['category_en'],
       categoryId: map['categoryId'] ?? 'pooja_samagri',
       price: (map['price'] ?? 0.0).toDouble(),
       originalPrice: (map['originalPrice'] ?? 0.0).toDouble(),
@@ -67,7 +113,9 @@ class StoreProduct {
       image: map['image'] ?? 'assets/images/store/prod_pooja_kit.png',
       galleryImages: List<String>.from(map['galleryImages'] ?? []),
       description: map['description'] ?? '',
+      descriptionEn: map['descriptionEn'] ?? map['description_en'],
       kitItems: List<String>.from(map['kitItems'] ?? []),
+      kitItemsEn: List<String>.from(map['kitItemsEn'] ?? map['kit_items_en'] ?? []),
       inStock: map['inStock'] ?? true,
       stockQuantity: map['stockQuantity'] ?? 50,
     );

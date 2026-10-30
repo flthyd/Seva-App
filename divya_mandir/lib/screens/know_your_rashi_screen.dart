@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/rashi_models.dart';
 import '../services/telugu_rashi_service.dart';
+import '../services/rashi_profile_storage_service.dart';
 import 'rashi_palalu_detail_screen.dart';
 
 class KnowYourRashiScreen extends StatefulWidget {
@@ -42,7 +42,6 @@ class _KnowYourRashiScreenState extends State<KnowYourRashiScreen> with SingleTi
 
   // Saved Family & User Profiles List
   List<UserAstrologyProfile> _savedProfilesList = [];
-  bool _isLoadingSaved = true;
 
   // Telugu Name Initial Letters mapped to Rashis
   final List<Map<String, dynamic>> _nameLetterGroups = [
@@ -80,26 +79,12 @@ class _KnowYourRashiScreenState extends State<KnowYourRashiScreen> with SingleTi
   }
 
   Future<void> _loadSavedProfiles() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      try {
-        final snap = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .collection('rashi_profiles')
-            .get();
-
-        if (snap.docs.isNotEmpty) {
-          final list = snap.docs.map((d) => UserAstrologyProfile.fromMap(d.data())).toList();
-          setState(() {
-            _savedProfilesList = list;
-            _isLoadingSaved = false;
-          });
-          return;
-        }
-      } catch (_) {}
+    final list = await RashiProfileStorageService().loadProfiles();
+    if (mounted) {
+      setState(() {
+        _savedProfilesList = list;
+      });
     }
-    setState(() => _isLoadingSaved = false);
   }
 
   @override
@@ -146,6 +131,180 @@ class _KnowYourRashiScreenState extends State<KnowYourRashiScreen> with SingleTi
     setState(() {
       _confirmedRashi = _service.getRashiById(foundRashiId);
     });
+
+    _showResultDialog(_confirmedRashi!);
+  }
+
+  void _showResultDialog(RashiDataModel r) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final userName = _nameController.text.trim().isEmpty ? 'భక్తుడు' : _nameController.text.trim();
+
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              elevation: 8,
+              backgroundColor: const Color(0xFFFCF8F2),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header with close button
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.verified_rounded, color: Colors.green, size: 22),
+                              SizedBox(width: 6),
+                              Text(
+                                "రాశి నిర్ధారణ పూర్తయింది!",
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded, color: Colors.grey, size: 22),
+                            onPressed: () => Navigator.pop(ctx),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Zodiac avatar
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF8B1528), Color(0xFF520F1C)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          border: Border.all(color: const Color(0xFFF1C40F), width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6A1B29).withValues(alpha: 0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/rashi_gold/${r.id}.png',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Center(
+                              child: Text(r.symbol, style: const TextStyle(fontSize: 38, color: Color(0xFFF1C40F))),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Person Name Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6A1B29).withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "$userName ($_selectedRelation)",
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF6A1B29)),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "${r.nameTelugu} రాశి (${r.englishName})",
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF6A1B29)),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        "అధిపతి: ${r.lordTelugu} • తత్త్వం: ${r.element}",
+                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "అదృష్ట సంఖ్య: ${r.luckyNumber} • అదృష్ట రంగు: ${r.luckyColor}",
+                        style: const TextStyle(fontSize: 12.5, color: Color(0xFF5A141A), fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Action Buttons inside Dialog
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF6A1B29), width: 1.5),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: _isSaving
+                                  ? null
+                                  : () async {
+                                      setDialogState(() => _isSaving = true);
+                                      await _saveAndAddToList();
+                                      setDialogState(() => _isSaving = false);
+                                      if (ctx.mounted) {
+                                        Navigator.pop(ctx);
+                                      }
+                                    },
+                              icon: const Icon(Icons.bookmark_add_outlined, color: Color(0xFF6A1B29), size: 18),
+                              label: const Text(
+                                "సేవ్ చేయి",
+                                style: TextStyle(color: Color(0xFF6A1B29), fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF861B2E),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: _isSaving
+                                  ? null
+                                  : () async {
+                                      setDialogState(() => _isSaving = true);
+                                      await _saveAndAddToList();
+                                      setDialogState(() => _isSaving = false);
+                                      if (ctx.mounted) {
+                                        Navigator.pop(ctx);
+                                      }
+                                      if (mounted && _savedProfilesList.isNotEmpty) {
+                                        _openProfileDirect(_savedProfilesList.first);
+                                      }
+                                    },
+                              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                              label: const Text(
+                                "ఫలితాలు చూడు",
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   // SAVE TO PERSON'S RASHI LIST
@@ -155,7 +314,6 @@ class _KnowYourRashiScreenState extends State<KnowYourRashiScreen> with SingleTi
     final userName = _nameController.text.trim().isEmpty ? 'భక్తుడు' : _nameController.text.trim();
     setState(() => _isSaving = true);
 
-    final user = FirebaseAuth.instance.currentUser;
     final docId = DateTime.now().millisecondsSinceEpoch.toString();
 
     final profile = UserAstrologyProfile(
@@ -171,16 +329,7 @@ class _KnowYourRashiScreenState extends State<KnowYourRashiScreen> with SingleTi
       phoneNumber: _phoneController.text.trim(),
     );
 
-    try {
-      if (user != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .collection('rashi_profiles')
-            .doc(docId)
-            .set(profile.toMap(), SetOptions(merge: true));
-      }
-    } catch (_) {}
+    await RashiProfileStorageService().saveProfile(profile);
 
     setState(() {
       _savedProfilesList.removeWhere((e) => e.id == docId);
@@ -218,15 +367,7 @@ class _KnowYourRashiScreenState extends State<KnowYourRashiScreen> with SingleTi
   }
 
   Future<void> _deleteProfile(String id) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('rashi_profiles')
-          .doc(id)
-          .delete();
-    }
+    await RashiProfileStorageService().deleteProfile(id);
     setState(() {
       _savedProfilesList.removeWhere((p) => p.id == id);
     });

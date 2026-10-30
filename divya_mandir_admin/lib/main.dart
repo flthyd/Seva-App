@@ -1,4 +1,5 @@
-﻿import 'manage_long_bells_screen.dart';
+import 'manage_long_bells_screen.dart';
+import 'manage_spiritual_books_screen.dart';
 import 'manage_home_sections_screen.dart';
 import 'manage_calendar_screen.dart';
 import 'manage_devalayalu_screen.dart';
@@ -6,6 +7,7 @@ import 'manage_neti_katha_screen.dart';
 import 'manage_mantra_japam_screen.dart';
 import 'manage_puja_vidhanam_screen.dart';
 import 'manage_devotional_store_screen.dart';
+import 'manage_notifications_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'manage_music_screen.dart';
@@ -97,6 +99,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   _buildMenuItem("Dashboard Overview", 0),
                   _buildMenuItem("Home Page", 10),
                   _buildMenuItem("Calendar & Panchangam", 11),
+                  _buildMenuItem("Push Notifications (నోటిఫికేషన్లు)", 17),
+                  _buildMenuItem("Manage Spiritual Books (ఆధ్యాత్మిక గ్రంథాలయం)", 18),
                   _buildMenuItem("Manage Temples (దేవాలయాలు)", 12),
                   _buildMenuItem("Manage Neti Katha (నేటి కథ)", 13),
                   _buildMenuItem("Manage Devotional Store (à°¸à±à°Ÿà±‹à°°à±)", 16),
@@ -200,6 +204,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
         return const ManagePujaVidhanamScreen();
       case 16:
         return const ManageDevotionalStoreScreen();
+      case 17:
+        return const ManageNotificationsScreen();
+      case 18:
+        return const ManageSpiritualBooksScreen();
       default:
         return const Center(
           child: Text(

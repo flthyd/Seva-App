@@ -132,4 +132,17 @@ class AppStrings {
   static String get catPustakalu => _lang.text(te: 'పుస్తకాలు', en: 'Books');
   static String get catVigrahalu => _lang.text(te: 'విగ్రహాలు', en: 'Idols');
   static String get catRudrakshalu => _lang.text(te: 'రుద్రాక్షలు', en: 'Rudraksha');
+  static String get catPasupuKunkuma => _lang.text(te: 'పసుపు కుంకుమలు', en: 'Turmeric & Kumkum');
+  static String get catGhruthaDeepalu => _lang.text(te: 'ఘృత దీపాలు', en: 'Ghee Lamps');
+  static String get catAratiSamagri => _lang.text(te: 'ఆరతి సామగ్రి', en: 'Aarti Items');
+  static String get catUpavasaUtsavalu => _lang.text(te: 'ఉపవాస & ఉత్సవాలు', en: 'Fasting & Festivals');
+
+  // Hero Banner & Buttons
+  static String get heroBannerTitle => _lang.text(
+      te: 'శుభకార్యాలకు\nపూజా సామగ్రి',
+      en: 'Pooja Samagri for\nAuspicious Occasions');
+  static String get viewNow => _lang.text(te: 'ఇప్పుడే చూడండి', en: 'View Now');
+  static String get viewAll => _lang.text(te: 'చూడండి', en: 'View All');
+  static String get searchResults => _lang.text(te: 'శోధన ఫలితాలు', en: 'Search Results');
+  static String get addedToCart => _lang.text(te: 'కార్ట్‌కు చేర్చబడింది!', en: 'Added to cart!');
 }

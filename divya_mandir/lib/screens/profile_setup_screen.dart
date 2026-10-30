@@ -26,7 +26,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
-  // Show bottom sheet to choose Camera or Gallery
   void _showImagePickerOptions() {
     showModalBottomSheet(
       context: context,
@@ -55,7 +54,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF6A1B29),
+                    color: Color(0xFF7A1B29),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -98,83 +97,59 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 130,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFFCF8F2),
+          color: const Color(0xFFF7EFE4),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF6A1B29).withValues(alpha: 0.2)),
+          border: Border.all(color: const Color(0xFFEADBCE)),
         ),
         child: Column(
           children: [
-            CircleAvatar(
-              radius: 26,
-              backgroundColor: const Color(0xFF6A1B29).withValues(alpha: 0.1),
-              child: Icon(icon, color: const Color(0xFF6A1B29), size: 28),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF6A1B29),
-              ),
-            ),
+            Icon(icon, color: const Color(0xFF7A1B29), size: 30),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF5D131F))),
           ],
         ),
       ),
     );
   }
 
-  // Pick image and compress below 200 KB automatically
   Future<void> _pickAndCompressImage(ImageSource source) async {
     try {
       final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: source,
-        imageQuality: 85,
-        maxWidth: 1200,
-        maxHeight: 1200,
-      );
-
+      final pickedFile = await picker.pickImage(source: source);
       if (pickedFile == null) return;
 
-      File fileToCompress = File(pickedFile.path);
-      int originalSize = await fileToCompress.length();
+      final fileToCompress = File(pickedFile.path);
+      final size = await fileToCompress.length();
 
-      // Target: strictly below 200 KB (200 * 1024 bytes)
-      const int targetBytes = 200 * 1024;
-
-      if (originalSize > targetBytes) {
+      if (size > 200 * 1024) {
         setState(() {
           _isLoading = true;
-          _loadingMessage = 'ఫోటో పరిమాణం తగ్గిస్తున్నాము (<200KB)...';
+          _loadingMessage = 'ఫోటో ఆప్టిమైజ్ చేయబడుతోంది...';
         });
 
-        int quality = 80;
+        int quality = 85;
         int minWidth = 800;
         int minHeight = 800;
         File currentFile = fileToCompress;
 
-        while (await currentFile.length() > targetBytes && quality > 15) {
-          final targetPath = '${fileToCompress.parent.path}/profile_cmp_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        while (quality >= 30) {
+          final targetPath = '${fileToCompress.parent.path}/comp_${DateTime.now().millisecondsSinceEpoch}.jpg';
           final compressedXFile = await FlutterImageCompress.compressAndGetFile(
             currentFile.absolute.path,
             targetPath,
             quality: quality,
             minWidth: minWidth,
             minHeight: minHeight,
-            format: CompressFormat.jpeg,
           );
 
-          if (compressedXFile != null) {
-            currentFile = File(compressedXFile.path);
-          } else {
-            break;
-          }
+          if (compressedXFile == null) break;
+          final compressedFile = File(compressedXFile.path);
+          final newSize = await compressedFile.length();
+          currentFile = compressedFile;
 
+          if (newSize <= 200 * 1024) break;
           quality -= 15;
           minWidth = (minWidth * 0.8).round();
           minHeight = (minHeight * 0.8).round();
@@ -207,7 +182,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('దయచేసి మీ పేరును నమోదు చేయండి (Please enter your name)')),
+        const SnackBar(content: Text('దయచేసి మీ పేరును నమోదు చేయండి')),
       );
       return;
     }
@@ -222,7 +197,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       String? uploadedImageUrl;
 
       if (user != null) {
-        // Upload compressed profile image if selected
         if (_selectedImage != null) {
           setState(() {
             _loadingMessage = 'ప్రొఫైల్ ఫోటో అప్‌లోడ్ అవుతోంది...';
@@ -239,7 +213,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         final Map<String, dynamic> updateData = {
           'name': name,
           'phone': user.phoneNumber ?? '',
-          'designation': 'Premium Devotee',
+          'designation': 'Devotee',
           'created_at': FieldValue.serverTimestamp(),
         };
 
@@ -278,172 +252,222 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFCF8F2),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF6A1B29), size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 10),
-              // Profile Circle Avatar + Camera Icon
-              Center(
-                child: GestureDetector(
-                  onTap: _isLoading ? null : _showImagePickerOptions,
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFF6A1B29).withValues(alpha: 0.3),
-                            width: 3,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          radius: 56,
-                          backgroundColor: Colors.grey.shade200,
-                          backgroundImage: _selectedImage != null
-                              ? FileImage(_selectedImage!)
-                              : null,
-                          child: _selectedImage == null
-                              ? const Icon(Icons.person, size: 64, color: Colors.grey)
-                              : null,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 2,
-                        right: 2,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF6A1B29),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 4,
+      backgroundColor: const Color(0xFFFCF7EE),
+      body: Stack(
+        children: [
+          // Bottom Golden Temple Sketch Landscape (from Reference Screen 3)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 220,
+            child: Opacity(
+              opacity: 0.85,
+              child: Image.asset(
+                'assets/images/auth/profile_bottom_bg.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox(),
+              ),
+            ),
+          ),
+
+          // Main Scrollable Content
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 36),
+
+                  // Circular Avatar with Golden Mandala & Yellow Camera Badge
+                  Center(
+                    child: GestureDetector(
+                      onTap: _isLoading ? null : _showImagePickerOptions,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Golden Lotus / Mandala Background Frame
+                          Image.asset(
+                            'assets/images/auth/profile_name_avatar.png',
+                            width: 175,
+                            height: 175,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 150,
+                              height: 150,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFF0E3D0),
                               ),
-                            ],
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            color: Colors.white,
-                            size: 20,
+
+                          // Profile Photo or User Silhouette inside Circular Maroon
+                          if (_selectedImage != null)
+                            ClipOval(
+                              child: Image.file(
+                                _selectedImage!,
+                                width: 96,
+                                height: 96,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+
+                          // Golden Yellow Camera Badge at bottom right of the circle
+                          Positioned(
+                            bottom: 28,
+                            right: 28,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE5A93C), // Golden yellow
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.camera_alt, color: Colors.black87, size: 16),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: _isLoading ? null : _showImagePickerOptions,
-                child: const Text(
-                  'ఫోటో జోడించండి (Add Photo)',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF6A1B29),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                "What's Your Name?",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF6A1B29),
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "This helps us personalize your experience",
-                style: TextStyle(fontSize: 14, color: Colors.black54),
-              ),
-              const SizedBox(height: 32),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: TextField(
-                  controller: _nameController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    hintText: "Enter your name",
-                    prefixIcon: Icon(Icons.person_outline, color: Colors.grey),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
-                ),
-              ),
-              if (_loadingMessage.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                Text(
-                  _loadingMessage,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF6A1B29),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 48),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _navigateToNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6A1B29),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                      : const Text(
-                          "Continue",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+
+                  const SizedBox(height: 24),
+
+                  // "మీ పేరు నమోదు చేయండి" Title
+                  const Text(
+                    "మీ పేరు నమోదు చేయండి",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF7A1B29),
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // "ఇది మీ ప్రొఫైల్‌లో చూపబడుతుంది" Subtitle
+                  Text(
+                    "ఇది మీ ప్రొఫైల్‌లో చూపబడుతుంది",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.brown.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+
+                  // Name Input Field with Person Icon
+                  Container(
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE2D6C5), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Icon(Icons.person_outline_rounded, color: Colors.brown.shade400, size: 22),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _nameController,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2C3E50),
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: "మీ పేరు",
+                              hintStyle: TextStyle(
+                                fontSize: 15,
+                                color: Color(0xFFB0A294),
+                                fontWeight: FontWeight.normal,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
                           ),
                         ),
-                ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+
+                  // "కొనసాగించండి →" Wide Maroon Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _navigateToNext,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7A1B29),
+                        elevation: 4,
+                        shadowColor: const Color(0x407A1B29),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: _isLoading
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                ),
+                                if (_loadingMessage.isNotEmpty) ...[
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    _loadingMessage,
+                                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                                  ),
+                                ],
+                              ],
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "కొనసాగించండి",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                              ],
+                            ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 120),
+                ],
               ),
-              const SizedBox(height: 32),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/store_data_service.dart';
 import '../services/cart_provider.dart';
+import '../services/language_service.dart';
 import 'store_product_detail_screen.dart';
 import 'store_cart_screen.dart';
 
@@ -19,17 +20,19 @@ class StoreCategoryListingScreen extends StatefulWidget {
 }
 
 class _StoreCategoryListingScreenState extends State<StoreCategoryListingScreen> {
-  String _selectedSubFilter = 'అన్నీ';
+  String _selectedSubFilter = 'all';
   final TextEditingController _searchCtrl = TextEditingController();
   final Set<String> _wishlist = {};
 
-  final List<String> _filterTabs = [
-    'అన్నీ',
-    'పూజా సామాగ్రి',
-    'దీపాలు',
-    'పూజా ప్లేట్లు',
-    'కుంకుమ పాత్రలు',
-  ];
+  List<Map<String, String>> _getFilterTabs(bool isTelugu) {
+    return [
+      {'id': 'all', 'name': isTelugu ? 'అన్నీ' : 'All'},
+      {'id': 'pooja_samagri', 'name': isTelugu ? 'పూజా సామాగ్రి' : 'Pooja Samagri'},
+      {'id': 'deepalu', 'name': isTelugu ? 'దీపాలు' : 'Lamps'},
+      {'id': 'plates', 'name': isTelugu ? 'పూజా ప్లేట్లు' : 'Pooja Plates'},
+      {'id': 'kumkum', 'name': isTelugu ? 'కుంకుమ పాత్రలు' : 'Kumkum Boxes'},
+    ];
+  }
 
   @override
   void dispose() {
@@ -41,14 +44,21 @@ class _StoreCategoryListingScreenState extends State<StoreCategoryListingScreen>
   Widget build(BuildContext context) {
     final cart = CartProvider();
     final allProducts = StoreDataService.defaultProducts;
+    final isTelugu = LanguageService().isTelugu;
+    final filterTabs = _getFilterTabs(isTelugu);
 
     final filtered = allProducts.where((p) {
-      if (_selectedSubFilter != 'అన్నీ' && p.teluguCategory != _selectedSubFilter) {
-        return false;
+      if (_selectedSubFilter != 'all') {
+        if (_selectedSubFilter == 'pooja_samagri' && p.categoryId != 'pooja_samagri') return false;
+        if (_selectedSubFilter == 'deepalu' && !p.teluguCategory.contains('దీపాలు') && !(p.categoryEn?.contains('Lamps') ?? false)) return false;
+        if (_selectedSubFilter == 'plates' && !p.teluguCategory.contains('ప్లేట్లు') && !(p.categoryEn?.contains('Plates') ?? false)) return false;
+        if (_selectedSubFilter == 'kumkum' && !p.name.contains('కుంకుమ') && !(p.nameEn?.contains('Kumkum') ?? false)) return false;
       }
-      if (_searchCtrl.text.isNotEmpty &&
-          !p.name.toLowerCase().contains(_searchCtrl.text.toLowerCase())) {
-        return false;
+      if (_searchCtrl.text.isNotEmpty) {
+        final query = _searchCtrl.text.toLowerCase();
+        final matchTe = p.name.toLowerCase().contains(query);
+        final matchEn = p.nameEn?.toLowerCase().contains(query) ?? false;
+        if (!matchTe && !matchEn) return false;
       }
       return true;
     }).toList();
@@ -116,10 +126,10 @@ class _StoreCategoryListingScreenState extends State<StoreCategoryListingScreen>
                     child: TextField(
                       controller: _searchCtrl,
                       onChanged: (val) => setState(() {}),
-                      decoration: const InputDecoration(
-                        hintText: 'ఈ విభాగంలో వెతకండి...',
+                      decoration: InputDecoration(
+                        hintText: isTelugu ? 'ఈ విభాగంలో వెతకండి...' : 'Search in this category...',
                         border: InputBorder.none,
-                        hintStyle: TextStyle(fontSize: 13, color: Colors.grey),
+                        hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
                       ),
                     ),
                   ),
@@ -133,10 +143,10 @@ class _StoreCategoryListingScreenState extends State<StoreCategoryListingScreen>
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             child: Row(
-              children: _filterTabs.map((tab) {
-                final isSelected = _selectedSubFilter == tab;
+              children: filterTabs.map((tab) {
+                final isSelected = _selectedSubFilter == tab['id'];
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedSubFilter = tab),
+                  onTap: () => setState(() => _selectedSubFilter = tab['id']!),
                   child: Container(
                     margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -148,7 +158,7 @@ class _StoreCategoryListingScreenState extends State<StoreCategoryListingScreen>
                       ),
                     ),
                     child: Text(
-                      tab,
+                      tab['name']!,
                       style: TextStyle(
                         color: isSelected ? Colors.white : const Color(0xFF424242),
                         fontWeight: FontWeight.bold,
@@ -164,7 +174,12 @@ class _StoreCategoryListingScreenState extends State<StoreCategoryListingScreen>
           // 2-Column Product Grid matching user screenshot
           Expanded(
             child: filtered.isEmpty
-                ? const Center(child: Text('ఉత్పత్తులు ఏవీ లేవు', style: TextStyle(color: Colors.grey)))
+                ? Center(
+                    child: Text(
+                      isTelugu ? 'ఉత్పత్తులు ఏవీ లేవు' : 'No products found',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  )
                 : GridView.builder(
                     padding: const EdgeInsets.all(12),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -177,6 +192,7 @@ class _StoreCategoryListingScreenState extends State<StoreCategoryListingScreen>
                     itemBuilder: (ctx, index) {
                       final product = filtered[index];
                       final isWishlisted = _wishlist.contains(product.id);
+                      final pName = product.localizedName(isTelugu);
 
                       return GestureDetector(
                         onTap: () {
@@ -259,7 +275,7 @@ class _StoreCategoryListingScreenState extends State<StoreCategoryListingScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      product.name,
+                                      pName,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -285,7 +301,7 @@ class _StoreCategoryListingScreenState extends State<StoreCategoryListingScreen>
                                             cart.addToCart(product);
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
-                                                content: Text('${product.name} కార్ట్‌కు చేర్చబడింది!'),
+                                                content: Text('$pName ${AppStrings.addedToCart}'),
                                                 duration: const Duration(seconds: 1),
                                               ),
                                             );
